@@ -14,7 +14,7 @@ PyQt6 desktop pet built by student A.
 Implemented in this step:
 
 - FastAPI application entrypoint.
-- Centralized environment configuration.
+- Centralized environment configuration in `app/config.py`.
 - Lightweight shared access-password helper.
 - Placeholder database configuration checker.
 - Pydantic schemas for health, chat, and world-state responses.
@@ -24,12 +24,22 @@ Implemented in this step:
 
 ## Local setup
 
+Use Python 3.10 or newer when possible. Python 3.11 is recommended for this
+project.
+
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 cp .env.example .env
 uvicorn app.main:app --reload
+```
+
+On Windows PowerShell, activate the virtual environment with:
+
+```powershell
+.venv\Scripts\Activate.ps1
 ```
 
 Then open:
@@ -49,6 +59,32 @@ API docs:
 ```text
 http://127.0.0.1:8000/docs
 ```
+
+## If dependency installation fails
+
+First confirm that you are installing into the project virtual environment:
+
+```bash
+python --version
+python -m pip --version
+```
+
+Then upgrade pip and retry:
+
+```bash
+python -m pip install --upgrade pip setuptools wheel
+python -m pip install -r requirements.txt
+```
+
+If you are in a network environment where the default PyPI source is slow or
+blocked, try a mirror:
+
+```bash
+python -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
+If your Python version is too old, install Python 3.10+ and recreate the virtual
+environment before running the install commands again.
 
 ## Current prototype endpoints
 
