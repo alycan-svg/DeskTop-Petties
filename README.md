@@ -201,3 +201,22 @@ $OutputEncoding = [System.Text.UTF8Encoding]::new()
 If the terminal still shows garbled characters, open the same endpoint in the
 browser or use FastAPI's docs page at `http://127.0.0.1:8000/docs`; the backend
 response is still valid UTF-8 JSON.
+
+
+## Step 2: Supabase database schema
+
+The cloud-memory schema lives in `sql/schema.sql`. Run it in the Supabase SQL
+Editor after creating a Supabase project.
+
+The schema creates these tables:
+
+- `worlds`: the shared cloud soul identity.
+- `world_state`: mood, color, animation, and personality values for the shared pet.
+- `messages`: user, assistant, and system chat history.
+- `memories`: long-term memory fragments extracted from conversations.
+- `tasks`: reserved DDL/task records for later mood and stress evolution.
+- `system_events`: structured audit events such as memory creation or mood changes.
+
+It also creates indexes for recent chat lookup, important memory retrieval, task
+filtering, and event history. The script seeds the first shared world with the id
+`shared_world` and its default state.
