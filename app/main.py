@@ -5,6 +5,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 
+from app.responses import UTF8JSONResponse
+
 from app.config import get_settings
 from app.routers import chat, world
 from app.schemas import HealthResponse
@@ -15,6 +17,7 @@ app = FastAPI(
     title=settings.app_name,
     version=settings.app_version,
     description="Cloud soul backend for a shared desktop pet Persona Core.",
+    default_response_class=UTF8JSONResponse,
 )
 
 app.add_middleware(

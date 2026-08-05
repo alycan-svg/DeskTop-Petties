@@ -109,3 +109,95 @@ Example request body:
   "message": "你好，世界之魂。"
 }
 ```
+
+## Manual API tests
+
+Keep `uvicorn app.main:app --reload` running in one terminal, then open a second
+terminal for these checks.
+
+### macOS, Linux, or Git Bash
+
+```bash
+curl http://127.0.0.1:8000/health
+curl http://127.0.0.1:8000/api/world/state
+curl -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"password":"persona-core","message":"你好，世界之魂"}'
+curl -X POST http://127.0.0.1:8000/api/chat \
+  -H "Content-Type: application/json" \
+  -d '{"password":"wrong-password","message":"你好"}'
+```
+
+### Windows PowerShell
+
+PowerShell treats `curl` as an alias for `Invoke-WebRequest`, so Linux-style
+`curl -H ... -d ...` commands may fail. Use `Invoke-RestMethod` instead:
+
+```powershell
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/health"
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/world/state"
+
+$chatBody = @{
+  password = "persona-core"
+  message = "你好，世界之魂"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri "http://127.0.0.1:8000/api/chat" `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $chatBody
+
+$wrongPasswordBody = @{
+  password = "wrong-password"
+  message = "你好"
+} | ConvertTo-Json
+
+Invoke-RestMethod `
+  -Method Post `
+  -Uri "http://127.0.0.1:8000/api/chat" `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $wrongPasswordBody
+```
+
+The wrong-password request is expected to fail with `401 Unauthorized`; in
+PowerShell, `Invoke-RestMethod` displays that HTTP error as a red exception.
+That means the password gate is working.
+
+If the Chinese reply appears garbled in PowerShell, set the console encoding to
+UTF-8 before the request:
+
+```powershell
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+```
+
+If you prefer real curl in PowerShell, call `curl.exe` and keep the command on
+one line. Quoting JSON inline in PowerShell is easy to break, so writing a body
+variable is safer:
+
+```powershell
+$chatJson = '{"password":"persona-core","message":"你好，世界之魂"}'
+curl.exe -X POST "http://127.0.0.1:8000/api/chat" -H "Content-Type: application/json; charset=utf-8" --data-raw $chatJson
+```
+
+
+## Windows Chinese output troubleshooting
+
+API responses explicitly declare `application/json; charset=utf-8`, but older
+PowerShell terminals can still display Chinese text incorrectly. If that happens,
+run these commands before testing the chat endpoint:
+
+```powershell
+chcp 65001
+[Console]::InputEncoding = [System.Text.UTF8Encoding]::new()
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new()
+$OutputEncoding = [System.Text.UTF8Encoding]::new()
+```
+
+If the terminal still shows garbled characters, open the same endpoint in the
+browser or use FastAPI's docs page at `http://127.0.0.1:8000/docs`; the backend
+response is still valid UTF-8 JSON.
