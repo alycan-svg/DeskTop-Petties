@@ -266,3 +266,21 @@ For automated service tests, install the development requirements and run:
 python -m pip install -r requirements-dev.txt
 python -m pytest
 ```
+
+## Step 4: Persist conversation turns
+
+`POST /api/chat` now writes each successful exchange to the Supabase `messages`
+table. The user message and the temporary assistant reply are sent as one insert
+request, in that order, and both rows use the configured `WORLD_ID`.
+
+Test the endpoint from `http://127.0.0.1:8000/docs` with the configured access
+password. After a successful `200` response, open Supabase Table Editor and
+inspect `messages`. Each request should add exactly two rows:
+
+1. `role = user`, containing the request's `message`.
+2. `role = assistant`, containing the backend reply.
+
+If persistence fails, the endpoint returns HTTP `502` instead of reporting a
+successful chat that was never saved. The reply is still a placeholder in this
+step; a later step will replace it with an LLM-generated response and retrieve
+relevant long-term memories.
