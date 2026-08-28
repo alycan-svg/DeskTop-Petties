@@ -37,3 +37,39 @@ def test_chat_returns_502_when_persistence_fails(monkeypatch) -> None:
 
     assert error.value.status_code == 502
     assert error.value.detail == "Unable to save the conversation turn to Supabase."
+
+
+def test_read_chat_history_returns_service_messages(monkeypatch) -> None:
+    checked_passwords: list[str] = []
+    requested_limits: list[int] = []
+    monkeypatch.setattr(
+        chat_router,
+        "verify_access_password",
+        checked_passwords.append,
+    )
+    monkeypatch.setattr(
+        chat_router,
+        "get_recent_messages",
+        lambda limit: requested_limits.append(limit) or [],
+    )
+
+    response = chat_router.read_chat_history(limit=12, access_password="valid")
+
+    assert response.messages == []
+    assert checked_passwords == ["valid"]
+    assert requested_limits == [12]
+
+
+def test_read_chat_history_returns_502_when_query_fails(monkeypatch) -> None:
+    monkeypatch.setattr(chat_router, "verify_access_password", lambda _password: None)
+
+    def fail_to_read(_limit: int) -> None:
+        raise RuntimeError("database unavailable")
+
+    monkeypatch.setattr(chat_router, "get_recent_messages", fail_to_read)
+
+    with pytest.raises(HTTPException) as error:
+        chat_router.read_chat_history(limit=20, access_password="valid")
+
+    assert error.value.status_code == 502
+    assert error.value.detail == "Unable to read conversation history from Supabase."

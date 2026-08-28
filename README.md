@@ -284,3 +284,25 @@ If persistence fails, the endpoint returns HTTP `502` instead of reporting a
 successful chat that was never saved. The reply is still a placeholder in this
 step; a later step will replace it with an LLM-generated response and retrieve
 relevant long-term memories.
+
+## Step 5: Read recent conversation history
+
+`GET /api/chat/history` retrieves the newest messages for the configured shared
+world. Supabase selects newest rows first so the database can apply the limit
+efficiently; the service then reverses that small result so clients receive the
+messages in natural, oldest-to-newest reading order.
+
+The endpoint accepts:
+
+- `limit`: optional query parameter from `1` to `100`, default `20`.
+- `X-Access-Password`: required request header containing `ACCESS_PASSWORD`.
+
+You can test it in `http://127.0.0.1:8000/docs`: first send several chat
+requests, then open `GET /api/chat/history`, set `limit` and the password header,
+and execute it. The returned `messages` should contain both user and assistant
+rows in chronological order. The password is a header rather than a URL query
+parameter so it is not copied into browser history or ordinary URL logs.
+
+This endpoint is also the context boundary for the future LLM service. A later
+step can request a small recent window without loading the shared world's entire
+conversation archive into every model call.

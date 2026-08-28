@@ -1,5 +1,9 @@
 """Pydantic schemas shared by API routes and services."""
 
+from datetime import datetime
+from typing import Literal
+from uuid import UUID
+
 from pydantic import BaseModel, Field
 
 
@@ -39,3 +43,19 @@ class ChatResponse(BaseModel):
     reply: str
     world_state: WorldState
     new_memories: list[str] = Field(default_factory=list)
+
+
+class Message(BaseModel):
+    """One persisted message in the shared world's conversation history."""
+
+    id: UUID
+    world_id: str
+    role: Literal["user", "assistant", "system"]
+    content: str
+    created_at: datetime
+
+
+class ChatHistoryResponse(BaseModel):
+    """Chronological recent messages for clients and future LLM context."""
+
+    messages: list[Message] = Field(default_factory=list)
