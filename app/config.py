@@ -14,6 +14,7 @@ class Settings(BaseSettings):
     access_password: str = "persona-core"
     supabase_url: str = ""
     supabase_service_role_key: str = ""
+    world_id: str = "shared_world"
     llm_provider: str = "mock"
     llm_api_key: str = ""
     llm_model: str = ""

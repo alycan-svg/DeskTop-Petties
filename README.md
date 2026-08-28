@@ -220,3 +220,45 @@ The schema creates these tables:
 It also creates indexes for recent chat lookup, important memory retrieval, task
 filtering, and event history. The script seeds the first shared world with the id
 `shared_world` and its default state.
+
+## Step 3: Connect FastAPI to Supabase
+
+The world-state endpoint now reads `world_state` from Supabase instead of
+returning a hard-coded object. Complete these steps after running
+`sql/schema.sql`:
+
+1. Open the API settings for your Supabase project and copy the project URL and
+   the **service role** key.
+2. Open your local `.env` file and fill in these values:
+
+   ```dotenv
+   SUPABASE_URL="https://your-project.supabase.co"
+   SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
+   WORLD_ID="shared_world"
+   ```
+
+3. Keep `.env` private. The service-role key bypasses normal database access
+   restrictions, so it must exist only on the FastAPI server—never in browser
+   JavaScript or the future PyQt6 application.
+4. Install the new dependency and restart FastAPI:
+
+   ```powershell
+   python -m pip install -r requirements.txt
+   python run.py
+   ```
+
+5. Visit `http://127.0.0.1:8000/api/world/state`. A successful response is the
+   seeded `shared_world` row from Supabase. `POST /api/chat` also returns this
+   same live state alongside its temporary reply.
+
+If the Supabase variables are empty, the API deliberately returns HTTP `503`
+instead of pretending that an in-memory value came from the cloud. Connection,
+permission, and query failures return HTTP `502`. If the configured world exists
+but has no `world_state` row, the backend inserts the default state automatically.
+
+For automated service tests, install the development requirements and run:
+
+```powershell
+python -m pip install -r requirements-dev.txt
+python -m pytest
+```
