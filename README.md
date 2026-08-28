@@ -247,6 +247,10 @@ returning a hard-coded object. Complete these steps after running
    python run.py
    ```
 
+   `run.py` can also be launched by its full path or through an IDE whose
+   terminal is in another directory. Static files and `.env` are resolved from
+   the repository root rather than from the terminal's current directory.
+
 5. Visit `http://127.0.0.1:8000/api/world/state`. A successful response is the
    seeded `shared_world` row from Supabase. `POST /api/chat` also returns this
    same live state alongside its temporary reply.

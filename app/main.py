@@ -8,6 +8,7 @@ from fastapi.responses import FileResponse
 from app.responses import UTF8JSONResponse
 
 from app.config import get_settings
+from app.paths import INDEX_FILE, STATIC_DIR
 from app.routers import chat, world
 from app.schemas import HealthResponse
 
@@ -30,7 +31,7 @@ app.add_middleware(
 
 app.include_router(chat.router)
 app.include_router(world.router)
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -46,4 +47,4 @@ def health() -> HealthResponse:
 @app.get("/", include_in_schema=False)
 def index() -> FileResponse:
     """Serve the minimal web entry point."""
-    return FileResponse("app/static/index.html")
+    return FileResponse(INDEX_FILE)

@@ -4,6 +4,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from app.paths import ENV_FILE
+
 
 class Settings(BaseSettings):
     """Runtime settings for the Shared Persona Core service."""
@@ -21,7 +23,7 @@ class Settings(BaseSettings):
     api_base_url: str = "http://127.0.0.1:8000"
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
     )
