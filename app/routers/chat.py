@@ -6,12 +6,11 @@ from app.database import DatabaseConfigurationError
 from app.schemas import ChatHistoryResponse, ChatRequest, ChatResponse
 from app.security import verify_access_password
 from app.services.conversation_service import get_recent_messages, save_conversation_turn
+from app.services.llm import generate_chat_reply
+from app.services.llm.factory import LLMConfigurationError
 from app.services.world_service import get_world_state
 
 router = APIRouter(prefix="/api", tags=["chat"])
-
-PLACEHOLDER_REPLY = "我听到了。云端的我还在苏醒，接下来会把这些话沉淀成长期记忆。"
-
 
 @router.get("/chat/history", response_model=ChatHistoryResponse)
 def read_chat_history(
@@ -52,7 +51,20 @@ def chat(request: ChatRequest) -> ChatResponse:
         ) from exc
 
     try:
-        save_conversation_turn(request.message, PLACEHOLDER_REPLY)
+        reply = generate_chat_reply(request.message, world_state)
+    except LLMConfigurationError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=str(exc),
+        ) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Unable to generate a reply.",
+        ) from exc
+
+    try:
+        save_conversation_turn(request.message, reply)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
@@ -60,7 +72,7 @@ def chat(request: ChatRequest) -> ChatResponse:
         ) from exc
 
     return ChatResponse(
-        reply=PLACEHOLDER_REPLY,
+        reply=reply,
         world_state=world_state,
         new_memories=[],
     )

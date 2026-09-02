@@ -306,3 +306,33 @@ parameter so it is not copied into browser history or ordinary URL logs.
 This endpoint is also the context boundary for the future LLM service. A later
 step can request a small recent window without loading the shared world's entire
 conversation archive into every model call.
+
+## Step 6: Replaceable LLM service layer
+
+Chat replies now pass through a provider-independent LLM layer. The layer builds
+one chronological context containing:
+
+1. A system prompt describing the shared desktop pet and its current world state.
+2. Up to `LLM_HISTORY_LIMIT` recent cloud messages.
+3. The user's current message.
+
+The default `LLM_PROVIDER="mock"` makes no external network request. It produces
+a deterministic Chinese response that shows how many previous messages were
+included, making context behavior testable before choosing a paid model. A real
+provider adapter can be added later without changing `/api/chat`, Supabase
+persistence, the web client, or the future PyQt6 client.
+
+Optional `.env` setting:
+
+```dotenv
+LLM_HISTORY_LIMIT=20
+```
+
+The value must be between `1` and `100`. With mock mode enabled, send another
+`POST /api/chat` request. Its reply should begin with `（Mock 模式）`, mention
+the current user message, and report the number of previous messages supplied as
+context. The exact user and assistant texts are then persisted as before.
+
+Setting an unsupported `LLM_PROVIDER` returns HTTP `503`; provider, context, or
+generation failures return HTTP `502`. This prevents an unsaved fallback answer
+from being mistaken for a successful model response.

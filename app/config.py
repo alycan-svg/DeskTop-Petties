@@ -2,6 +2,7 @@
 
 from functools import lru_cache
 
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.paths import ENV_FILE
@@ -20,6 +21,7 @@ class Settings(BaseSettings):
     llm_provider: str = "mock"
     llm_api_key: str = ""
     llm_model: str = ""
+    llm_history_limit: int = Field(default=20, ge=1, le=100)
     api_base_url: str = "http://127.0.0.1:8000"
 
     model_config = SettingsConfigDict(
