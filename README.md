@@ -328,6 +328,19 @@ Optional `.env` setting:
 LLM_HISTORY_LIMIT=20
 ```
 
+The repository updates `.env.example`, not your private `.env`. Git deliberately
+ignores `.env` so a pull cannot overwrite database keys, access passwords, or
+other local secrets. Existing clones must therefore add new settings manually.
+In PowerShell, you can append this setting with:
+
+```powershell
+Add-Content -Path .env -Value "`nLLM_HISTORY_LIMIT=20"
+```
+
+Omitting it is also safe: the application default remains `20`. After editing
+`.env`, stop the server with `Ctrl+C` and run `python run.py` again so cached
+settings are reloaded.
+
 The value must be between `1` and `100`. With mock mode enabled, send another
 `POST /api/chat` request. Its reply should begin with `（Mock 模式）`, mention
 the current user message, and report the number of previous messages supplied as
@@ -336,3 +349,11 @@ context. The exact user and assistant texts are then persisted as before.
 Setting an unsupported `LLM_PROVIDER` returns HTTP `503`; provider, context, or
 generation failures return HTTP `502`. This prevents an unsaved fallback answer
 from being mistaken for a successful model response.
+
+Password verification intentionally happens before database and LLM work. To
+test the unsupported-provider response, change only `LLM_PROVIDER`, restart the
+server, and send `POST /api/chat` with the exact current `ACCESS_PASSWORD` from
+your private `.env`. A `401 Invalid access password` means the request stopped at
+authentication and never reached provider selection; it does not indicate an
+LLM-provider error. With a correct password and `LLM_PROVIDER="not-supported"`,
+the expected result is HTTP `503` with `Unsupported LLM_PROVIDER: not-supported`.

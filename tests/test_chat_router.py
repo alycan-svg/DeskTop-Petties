@@ -5,6 +5,7 @@ from fastapi import HTTPException
 
 from app.routers import chat as chat_router
 from app.schemas import ChatRequest, WorldState
+from app.services.llm.factory import LLMConfigurationError
 
 
 def test_chat_saves_the_returned_reply(monkeypatch) -> None:
@@ -63,6 +64,22 @@ def test_chat_returns_502_when_generation_fails(monkeypatch) -> None:
 
     assert error.value.status_code == 502
     assert error.value.detail == "Unable to generate a reply."
+
+
+def test_chat_returns_503_for_unsupported_provider(monkeypatch) -> None:
+    monkeypatch.setattr(chat_router, "verify_access_password", lambda _password: None)
+    monkeypatch.setattr(chat_router, "get_world_state", WorldState)
+
+    def unsupported_provider(_message: str, _state: WorldState) -> None:
+        raise LLMConfigurationError("Unsupported LLM_PROVIDER: not-supported")
+
+    monkeypatch.setattr(chat_router, "generate_chat_reply", unsupported_provider)
+
+    with pytest.raises(HTTPException) as error:
+        chat_router.chat(ChatRequest(message="你好", password="valid"))
+
+    assert error.value.status_code == 503
+    assert error.value.detail == "Unsupported LLM_PROVIDER: not-supported"
 
 
 def test_read_chat_history_returns_service_messages(monkeypatch) -> None:
